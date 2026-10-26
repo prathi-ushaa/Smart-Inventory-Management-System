@@ -1,0 +1,30 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      MONGO_URI: mongodb://mongo:27017/inventory
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      PORT: 5000
+      # Optional: on AWS, set the ARN of an SNS topic to get low-stock emails.
+      SNS_TOPIC_ARN: ${SNS_TOPIC_ARN:-}
+      AWS_REGION: ${AWS_REGION:-ap-south-1}
+    depends_on:
+      - mongo
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
